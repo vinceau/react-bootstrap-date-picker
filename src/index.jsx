@@ -419,16 +419,35 @@ export default createReactClass({
   },
 
   handleKeyDown(e) {
-    if (e.which === 9 && this.state.inputFocused) {
-      this.setState({
-        focused: false
-      });
-
-      if (this.props.onBlur) {
-        const event = document.createEvent('CustomEvent');
-        event.initEvent('Change Date', true, false);
-        ReactDOM.findDOMNode(this.refs.hiddenInput).dispatchEvent(event);
-        this.props.onBlur(event);
+    if (this.state.inputFocused) {
+      if (e.which === 9) {  // handle the tab key (defocus input field)
+        this.setState({
+          focused: false
+        });
+        if (this.props.onBlur) {
+          const event = document.createEvent('CustomEvent');
+          event.initEvent('Change Date', true, false);
+          ReactDOM.findDOMNode(this.refs.hiddenInput).dispatchEvent(event);
+          this.props.onBlur(event);
+        }
+      }
+      if (e.which === 38 || e.which === 40) {  // 38 = up, 40 = down
+        // by default up and down moves to start and end of input field
+        e.preventDefault();
+        // back up the current cursor location
+        const cursorPos = e.target.selectionStart;
+        const day = this.state.selectedDate;
+        const nextDay = new Date(day);
+        if (e.which === 38) {
+          nextDay.setDate(day.getDate()+1);
+        } else {
+          nextDay.setDate(day.getDate()-1);
+        }
+        // setting the input changes the cursor location
+        ReactDOM.findDOMNode(this.refs.input).value = this.makeInputValueString(nextDay);
+        this.handleInputChange();
+        // restore the cursor location
+        e.target.setSelectionRange(cursorPos, cursorPos);
       }
     }
   },
